@@ -170,39 +170,45 @@ clean:
 # Help
 # ============================================================================
 
+# Help colors
+HELP_C_CYAN   := \033[36m
+HELP_C_GREEN  := \033[32m
+HELP_C_YELLOW := \033[33m
+HELP_C_RESET  := \033[0m
+
 help:
-	@echo "mudd.one - Veterinary Ultrasound Processing"
-	@echo ""
-	@echo "Build:"
-	@echo "  make build           Build debug (workspace)"
-	@echo "  make release         Build release (workspace)"
-	@echo ""
-	@echo "Quality:"
-	@echo "  make fmt             Format all code"
-	@echo "  make fmt-check       Check formatting (no changes)"
-	@echo "  make lint            Format check + clippy -D warnings"
-	@echo "  make check           Full quality gate (fmt + clippy)"
-	@echo "  make test            Run all tests"
-	@echo "  make test-quick      Run lib tests only (fast)"
-	@echo "  make ci              Full CI: fmt-check + lint + test"
-	@echo "  make fix             Auto-fix clippy + format"
-	@echo ""
-	@echo "Version:"
-	@echo "  make version         Show current version"
-	@echo "  make bump-patch      Bump patch (0.1.0 -> 0.1.1)"
-	@echo "  make bump-minor      Bump minor (0.1.0 -> 0.2.0)"
-	@echo "  make bump-major      Bump major (0.1.0 -> 1.0.0)"
-	@echo ""
-	@echo "Hooks:"
-	@echo "  make hooks-install   Install pre-commit + pre-push hooks"
-	@echo "  make hooks-uninstall Remove hooks"
-	@echo ""
-	@echo "App:"
-	@echo "  make bindings        Build FFI + generate Swift bindings"
-	@echo "  make xcode           Regenerate Xcode project (xcodegen)"
-	@echo "  make app             Full app build (bindings + xcode + build)"
-	@echo "  make dmg             Build release DMG (ad-hoc signed)"
-	@echo "  make dmg-signed      Build release DMG (Developer ID signed)"
-	@echo ""
-	@echo "Other:"
-	@echo "  make clean           cargo clean + remove caches"
+	@printf '\n$(HELP_C_CYAN)%s$(HELP_C_RESET)\n' 'mudd.one - Veterinary Ultrasound Processing'
+	@printf '\n'
+	@printf '  $(HELP_C_YELLOW)%s$(HELP_C_RESET)\n' 'BUILD'
+	@printf '    $(HELP_C_GREEN)%-18s$(HELP_C_RESET) %s\n' 'build' 'Build debug (workspace)'
+	@printf '    $(HELP_C_GREEN)%-18s$(HELP_C_RESET) %s\n' 'release' 'Build release (workspace)'
+	@printf '\n'
+	@printf '  $(HELP_C_YELLOW)%s$(HELP_C_RESET)\n' 'QUALITY'
+	@printf '    $(HELP_C_GREEN)%-18s$(HELP_C_RESET) %s\n' 'fmt' 'Format all code'
+	@printf '    $(HELP_C_GREEN)%-18s$(HELP_C_RESET) %s\n' 'fmt-check' 'Check formatting (no changes)'
+	@printf '    $(HELP_C_GREEN)%-18s$(HELP_C_RESET) %s\n' 'lint' 'Format check + clippy -D warnings'
+	@printf '    $(HELP_C_GREEN)%-18s$(HELP_C_RESET) %s\n' 'check' 'Full quality gate (fmt + clippy)'
+	@printf '    $(HELP_C_GREEN)%-18s$(HELP_C_RESET) %s\n' 'test' 'Run all tests'
+	@printf '    $(HELP_C_GREEN)%-18s$(HELP_C_RESET) %s\n' 'test-quick' 'Run lib tests only (fast)'
+	@printf '    $(HELP_C_GREEN)%-18s$(HELP_C_RESET) %s\n' 'ci' 'Full CI: fmt-check + lint + test'
+	@printf '    $(HELP_C_GREEN)%-18s$(HELP_C_RESET) %s\n' 'fix' 'Auto-fix clippy + format'
+	@printf '\n'
+	@printf '  $(HELP_C_YELLOW)%s$(HELP_C_RESET)\n' 'VERSION'
+	@printf '    $(HELP_C_GREEN)%-18s$(HELP_C_RESET) %s\n' 'version' 'Show current version'
+	@printf '    $(HELP_C_GREEN)%-18s$(HELP_C_RESET) %s\n' 'bump-patch' 'Bump patch (0.1.0 -> 0.1.1)'
+	@printf '    $(HELP_C_GREEN)%-18s$(HELP_C_RESET) %s\n' 'bump-minor' 'Bump minor (0.1.0 -> 0.2.0)'
+	@printf '    $(HELP_C_GREEN)%-18s$(HELP_C_RESET) %s\n' 'bump-major' 'Bump major (0.1.0 -> 1.0.0)'
+	@printf '\n'
+	@printf '  $(HELP_C_YELLOW)%s$(HELP_C_RESET)\n' 'HOOKS'
+	@printf '    $(HELP_C_GREEN)%-18s$(HELP_C_RESET) %s\n' 'hooks-install' 'Install pre-commit + pre-push hooks'
+	@printf '%s\n' '  make hooks-uninstall Remove hooks'
+	@printf '\n'
+	@printf '  $(HELP_C_YELLOW)%s$(HELP_C_RESET)\n' 'APP'
+	@printf '    $(HELP_C_GREEN)%-18s$(HELP_C_RESET) %s\n' 'bindings' 'Build FFI + generate Swift bindings'
+	@printf '    $(HELP_C_GREEN)%-18s$(HELP_C_RESET) %s\n' 'xcode' 'Regenerate Xcode project (xcodegen)'
+	@printf '    $(HELP_C_GREEN)%-18s$(HELP_C_RESET) %s\n' 'app' 'Full app build (bindings + xcode + build)'
+	@printf '    $(HELP_C_GREEN)%-18s$(HELP_C_RESET) %s\n' 'dmg' 'Build release DMG (ad-hoc signed)'
+	@printf '    $(HELP_C_GREEN)%-18s$(HELP_C_RESET) %s\n' 'dmg-signed' 'Build release DMG (Developer ID signed)'
+	@printf '\n'
+	@printf '  $(HELP_C_YELLOW)%s$(HELP_C_RESET)\n' 'OTHER'
+	@printf '    $(HELP_C_GREEN)%-18s$(HELP_C_RESET) %s\n' 'clean' 'cargo clean + remove caches'
