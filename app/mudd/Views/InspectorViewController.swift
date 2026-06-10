@@ -20,6 +20,10 @@ class InspectorViewController: NSViewController {
     private var currentIndex: Int = 0
     private var sessionId: UInt64 = 0
 
+    // Classification (per frame, from Swift-side CoreML classifier)
+    private let classificationLabel = NSTextField(wrappingLabelWithString: "")
+    private var frameClassifications: [Int: FfiClassification] = [:]
+
     override func loadView() {
         let container = NSView()
         container.wantsLayer = true
@@ -69,8 +73,12 @@ class InspectorViewController: NSViewController {
         stackView.edgeInsets = NSEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
         stackView.translatesAutoresizingMaskIntoConstraints = false
 
+        classificationLabel.font = .monospacedSystemFont(ofSize: 10, weight: .regular)
+        classificationLabel.textColor = .secondaryLabelColor
+
         stackView.addArrangedSubview(titleLabel)
         stackView.addArrangedSubview(infoLabel)
+        stackView.addArrangedSubview(classificationLabel)
         stackView.addArrangedSubview(filterSeparator)
         stackView.addArrangedSubview(filterLabel)
 
@@ -109,6 +117,10 @@ class InspectorViewController: NSViewController {
             self, selector: #selector(handleIndexChanged),
             name: .muddCurrentIndexChanged, object: nil
         )
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(handleFrameClassified),
+            name: .muddFrameClassified, object: nil
+        )
     }
 
     // MARK: - Notifications
@@ -121,8 +133,29 @@ class InspectorViewController: NSViewController {
         originalFrames = frames
         currentFrames = frames
         currentIndex = 0
+        frameClassifications = [:]
+        updateClassificationLabel()
         updateInfoLabel(first, count: frames.count)
         enableFilterButtons(true)
+    }
+
+    @objc private func handleFrameClassified(_ notification: Notification) {
+        guard let index = notification.userInfo?["index"] as? Int else { return }
+        if let classification = notification.userInfo?["classification"] as? FfiClassification {
+            frameClassifications[index] = classification
+        } else {
+            frameClassifications.removeValue(forKey: index)
+        }
+        updateClassificationLabel()
+    }
+
+    private func updateClassificationLabel() {
+        if let c = frameClassifications[currentIndex] {
+            let pct = String(format: "%.1f", c.confidence * 100)
+            classificationLabel.stringValue = "Class: \(c.label) (\(pct)%)"
+        } else {
+            classificationLabel.stringValue = ""
+        }
     }
 
     @objc private func handleFrameUpdated(_ notification: Notification) {
@@ -183,6 +216,7 @@ class InspectorViewController: NSViewController {
         if index < currentFrames.count {
             updateInfoLabel(currentFrames[index], count: currentFrames.count)
         }
+        updateClassificationLabel()
     }
 
     // MARK: - Filters

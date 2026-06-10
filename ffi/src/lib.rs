@@ -258,12 +258,20 @@ pub enum FfiImageFormat {
     Tiff,
 }
 
+/// Classification result produced by the Swift-side CoreML classifier
+#[derive(uniffi::Record)]
+pub struct FfiClassification {
+    pub label: String,
+    pub confidence: f32,
+}
+
 /// One frame with optional masks, ready for export
 #[derive(uniffi::Record)]
 pub struct FfiExportItem {
     pub frame: FfiFrame,
     pub masks: Vec<FfiMask>,
     pub frame_index: u32,
+    pub classification: Option<FfiClassification>,
 }
 
 #[uniffi::export]
@@ -315,6 +323,12 @@ pub fn export_dataset(
                 metadata: FrameMetadata {
                     frame_index: item.frame_index as usize,
                     total_frames: total as usize,
+                    classification: item.classification.map(|c| {
+                        mudd_core::imaging::types::Classification {
+                            label: c.label,
+                            confidence: c.confidence,
+                        }
+                    }),
                     ..Default::default()
                 },
             })

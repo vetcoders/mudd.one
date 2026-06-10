@@ -81,6 +81,14 @@ pub enum FilterType {
     GaussianBlur,
 }
 
+/// Classification result for a frame, produced by an external classifier
+/// (the Swift-side CoreML model — core never runs classification itself)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Classification {
+    pub label: String,
+    pub confidence: f32,
+}
+
 /// Frame metadata extracted from DICOM or video
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct FrameMetadata {
@@ -90,6 +98,7 @@ pub struct FrameMetadata {
     pub pixel_spacing: Option<(f64, f64)>,
     pub frame_index: usize,
     pub total_frames: usize,
+    pub classification: Option<Classification>,
 }
 
 #[cfg(test)]

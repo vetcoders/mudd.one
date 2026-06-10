@@ -41,6 +41,12 @@ pub fn export_coco(config: &ExportConfig, items: &[ExportItem]) -> Result<()> {
             file_name: filename,
             width: frame.width,
             height: frame.height,
+            classification: item
+                .metadata
+                .classification
+                .as_ref()
+                .map(|c| c.label.clone()),
+            classification_confidence: item.metadata.classification.as_ref().map(|c| c.confidence),
         });
 
         // Convert masks to annotations (skip empty masks)
@@ -181,6 +187,10 @@ struct CocoImage {
     file_name: String,
     width: u32,
     height: u32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    classification: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    classification_confidence: Option<f32>,
 }
 
 #[derive(Serialize)]
@@ -342,5 +352,74 @@ mod tests {
         assert_eq!(annotations.len(), 2);
         assert!(annotations[0]["area"].as_f64().unwrap() > 0.0);
         assert!(annotations[1]["area"].as_f64().unwrap() > 0.0);
+    }
+
+    #[test]
+    fn export_coco_serializes_classification() {
+        use crate::imaging::types::{Classification, ColorSpace, FrameMetadata, FrameSource};
+        use crate::pipeline::contracts::{
+            ExportConfig, ExportFormat, ExportItem, ImageExportFormat, ProcessedFrame,
+        };
+
+        let dir = tempfile::tempdir().unwrap();
+        let frame = crate::imaging::types::Frame {
+            data: vec![128u8; 100],
+            width: 10,
+            height: 10,
+            colorspace: ColorSpace::Grayscale,
+            source: FrameSource::Image {
+                path: String::new(),
+            },
+        };
+
+        let config = ExportConfig {
+            format: ExportFormat::Coco,
+            output_dir: dir.path().to_str().unwrap().to_string(),
+            image_format: ImageExportFormat::Png,
+            include_metadata: false,
+        };
+
+        let items = vec![
+            ExportItem {
+                processed: ProcessedFrame {
+                    frame: frame.clone(),
+                    filters_applied: vec![],
+                },
+                annotation: None,
+                metadata: FrameMetadata {
+                    classification: Some(Classification {
+                        label: "liver".to_string(),
+                        confidence: 0.93,
+                    }),
+                    ..Default::default()
+                },
+            },
+            ExportItem {
+                processed: ProcessedFrame {
+                    frame: frame.clone(),
+                    filters_applied: vec![],
+                },
+                annotation: None,
+                metadata: FrameMetadata {
+                    frame_index: 1,
+                    ..Default::default()
+                },
+            },
+        ];
+
+        export_coco(&config, &items).unwrap();
+
+        let json_path = dir.path().join("annotations.json");
+        let json: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(&json_path).unwrap()).unwrap();
+
+        let images = json["images"].as_array().unwrap();
+        assert_eq!(images.len(), 2);
+        assert_eq!(images[0]["classification"].as_str().unwrap(), "liver");
+        let conf = images[0]["classification_confidence"].as_f64().unwrap();
+        assert!((conf - 0.93).abs() < 1e-6);
+        // Unclassified frame: fields absent, not null
+        assert!(images[1].get("classification").is_none());
+        assert!(images[1].get("classification_confidence").is_none());
     }
 }

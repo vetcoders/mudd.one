@@ -45,5 +45,6 @@ pub fn extract_metadata(path: &str) -> Result<FrameMetadata> {
         pixel_spacing,
         frame_index: 0,
         total_frames,
+        classification: None,
     })
 }

@@ -20,6 +20,13 @@ class SidebarViewController: NSViewController {
     private let engineStatusLabel = NSTextField(labelWithString: "Engine: not loaded")
     private let segModeButton = NSButton(title: "Prompt Mode", target: nil, action: nil)
 
+    // Classification (Swift-side CoreML)
+    private let classifySeparator = NSBox()
+    private let classifyLabel = NSTextField(labelWithString: "Classification")
+    private let loadClassifierButton = NSButton(title: "Load Classifier...", target: nil, action: nil)
+    private let classifierStatusLabel = NSTextField(labelWithString: "Classifier: not loaded")
+    private let classifyButton = NSButton(title: "Classify Frame", target: nil, action: nil)
+
     // Export
     private let exportSeparator = NSBox()
     private let exportLabel = NSTextField(labelWithString: "Export")
@@ -30,6 +37,9 @@ class SidebarViewController: NSViewController {
     private var currentRoi: FfiRoi?
     // Per-frame masks from segmentation (keyed by frame index)
     private var frameMasks: [Int: [FfiMask]] = [:]
+    // Per-frame classification results (keyed by frame index)
+    private var frameClassifications: [Int: FfiClassification] = [:]
+    private var classifierReady = false
     // Session counter — prevents stale async callbacks after file reload
     private var sessionId: UInt64 = 0
 
@@ -77,6 +87,24 @@ class SidebarViewController: NSViewController {
         segModeButton.action = #selector(toggleSegMode)
         segModeButton.isEnabled = false
 
+        // Classification section
+        classifySeparator.boxType = .separator
+        classifyLabel.font = .boldSystemFont(ofSize: 11)
+        classifyLabel.textColor = .secondaryLabelColor
+
+        configureSFButton(loadClassifierButton, symbol: "tag", label: "Load Classifier...")
+        loadClassifierButton.target = self
+        loadClassifierButton.action = #selector(openClassifierFile)
+
+        classifierStatusLabel.font = .systemFont(ofSize: 10)
+        classifierStatusLabel.textColor = .tertiaryLabelColor
+        classifierStatusLabel.alignment = .center
+
+        configureSFButton(classifyButton, symbol: "sparkles", label: "Classify Frame")
+        classifyButton.target = self
+        classifyButton.action = #selector(classifyCurrentFrame)
+        classifyButton.isEnabled = false
+
         // Export section
         exportSeparator.boxType = .separator
         exportLabel.font = .boldSystemFont(ofSize: 11)
@@ -107,6 +135,13 @@ class SidebarViewController: NSViewController {
         stackView.addArrangedSubview(initEngineButton)
         stackView.addArrangedSubview(engineStatusLabel)
         stackView.addArrangedSubview(segModeButton)
+
+        // Classification
+        stackView.addArrangedSubview(classifySeparator)
+        stackView.addArrangedSubview(classifyLabel)
+        stackView.addArrangedSubview(loadClassifierButton)
+        stackView.addArrangedSubview(classifierStatusLabel)
+        stackView.addArrangedSubview(classifyButton)
 
         // Export
         stackView.addArrangedSubview(exportSeparator)
@@ -162,10 +197,12 @@ class SidebarViewController: NSViewController {
         currentIndex = 0
         currentRoi = nil
         frameMasks = [:]
+        frameClassifications = [:]
         autoRoiButton.isEnabled = !frames.isEmpty
         cropButton.isEnabled = false
         clearRoiButton.isEnabled = false
         exportButton.isEnabled = !frames.isEmpty
+        classifyButton.isEnabled = classifierReady && !frames.isEmpty
     }
 
     @objc private func handleMasksUpdated(_ notification: Notification) {
@@ -180,8 +217,14 @@ class SidebarViewController: NSViewController {
         if index < currentFrames.count {
             currentFrames[index] = frame
         }
-        // Invalidate masks for this frame — image changed, old masks are stale
+        // Invalidate masks and classification for this frame — image changed
         frameMasks.removeValue(forKey: index)
+        if frameClassifications.removeValue(forKey: index) != nil {
+            NotificationCenter.default.post(
+                name: .muddFrameClassified, object: nil,
+                userInfo: ["index": index, "classification": NSNull()]
+            )
+        }
     }
 
     @objc private func handleRoiDetected(_ notification: Notification) {
@@ -375,6 +418,73 @@ class SidebarViewController: NSViewController {
         )
     }
 
+    // MARK: - Classification
+
+    @objc private func openClassifierFile() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [
+            .init(filenameExtension: "mlmodel")!,
+            .init(filenameExtension: "mlpackage")!,
+            .init(filenameExtension: "mlmodelc")!,
+        ]
+        panel.message = "Select CoreML classifier model"
+        panel.beginSheetModal(for: view.window!) { [weak self] response in
+            guard response == .OK, let url = panel.url else { return }
+            self?.loadClassifierModel(url: url)
+        }
+    }
+
+    private func loadClassifierModel(url: URL) {
+        loadClassifierButton.isEnabled = false
+        classifierStatusLabel.stringValue = "Classifier: loading..."
+
+        ClassifierService.shared.loadModel(at: url) { [weak self] result in
+            self?.loadClassifierButton.isEnabled = true
+            switch result {
+            case .success(let name):
+                self?.classifierReady = true
+                self?.classifierStatusLabel.stringValue = "Classifier: \(name)"
+                self?.classifyButton.isEnabled = !(self?.currentFrames.isEmpty ?? true)
+            case .failure(let error):
+                self?.classifierReady = false
+                self?.classifierStatusLabel.stringValue = "Classifier: failed"
+                self?.classifyButton.isEnabled = false
+                let alert = NSAlert()
+                alert.messageText = "Classifier Load Failed"
+                alert.informativeText = error.localizedDescription
+                alert.runModal()
+            }
+        }
+    }
+
+    @objc private func classifyCurrentFrame() {
+        guard !currentFrames.isEmpty else { return }
+        let idx = currentIndex
+        let session = sessionId
+        let frame = currentFrames[idx]
+        classifyButton.isEnabled = false
+        classifyButton.title = "Classifying..."
+
+        ClassifierService.shared.classify(frame: frame) { [weak self] result in
+            guard self?.sessionId == session else { return }
+            self?.classifyButton.title = "Classify Frame"
+            self?.classifyButton.isEnabled = true
+            switch result {
+            case .success(let classification):
+                self?.frameClassifications[idx] = classification
+                NotificationCenter.default.post(
+                    name: .muddFrameClassified, object: nil,
+                    userInfo: ["index": idx, "classification": classification]
+                )
+            case .failure(let error):
+                let alert = NSAlert()
+                alert.messageText = "Classification Failed"
+                alert.informativeText = error.localizedDescription
+                alert.runModal()
+            }
+        }
+    }
+
     // MARK: - Export
 
     @objc private func openExportPanel() {
@@ -406,11 +516,17 @@ class SidebarViewController: NSViewController {
         let ffiFormat: FfiExportFormat = response == .alertFirstButtonReturn ? .yolo : .coco
         let formatName = response == .alertFirstButtonReturn ? "YOLO" : "COCO"
 
-        // Build export items from current frames + masks
+        // Build export items from current frames + masks + classifications
         var items: [FfiExportItem] = []
         for (i, frame) in currentFrames.enumerated() {
             let masks = frameMasks[i] ?? []
-            items.append(FfiExportItem(frame: frame, masks: masks, frameIndex: UInt32(i)))
+            items.append(
+                FfiExportItem(
+                    frame: frame,
+                    masks: masks,
+                    frameIndex: UInt32(i),
+                    classification: frameClassifications[i]
+                ))
         }
 
         exportButton.isEnabled = false
@@ -456,4 +572,5 @@ extension Notification.Name {
     static let muddFrameUpdated = Notification.Name("muddFrameUpdated")
     static let muddCurrentIndexChanged = Notification.Name("muddCurrentIndexChanged")
     static let muddMasksUpdated = Notification.Name("muddMasksUpdated")
+    static let muddFrameClassified = Notification.Name("muddFrameClassified")
 }
