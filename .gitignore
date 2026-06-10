@@ -4,8 +4,7 @@ target/
 *.safetensors
 *.bin
 *.npz
-models/**/*.onnx
-models/**/*.safetensors
+models/
 .loctree/
 
 # Xcode
@@ -21,3 +20,4 @@ app/mudd/Bridge/mudd_ffiFFI.modulemap
 /build
 CLAUDE.md
 /.ai-agents
+*.loctree*
