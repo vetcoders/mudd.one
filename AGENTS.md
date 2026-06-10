@@ -45,7 +45,7 @@ This repository is a Rust workspace (see `Cargo.toml`) with two crates:
 - `core/` (`mudd-core`): DICOM/image/video loading, ROI detection + cropping, image filters/normalization, ONNX inference, and dataset export (COCO/YOLO).
 - `ffi/` (`mudd-ffi`): UniFFI bridge exposing Swift-friendly types (`Ffi*`) and exported functions in `ffi/src/lib.rs`.
 
-Generated or local-only directories: `target/` (build output) and `.loctree/` (tool cache). `models/` is reserved for local model assets; model binaries are gitignored (`*.onnx`, `*.safetensors`, etc.). Note: `README.md` describes broader "phase 1" goals and may not match the current Rust-only layout.
+Generated or local-only directories: `target/` (build output) and `.loctree/` (tool cache). `models/` is local-only and fully gitignored (model binaries and CreateML projects live there). `README.md` describes the actual stack: Rust core + UniFFI + Swift/AppKit app, with the Swift-side CoreML classifier (`app/mudd/Services/ClassifierService.swift`).
 
 ## Build, Test, and Development Commands
 
