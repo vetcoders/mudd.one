@@ -41,10 +41,12 @@ while IFS= read -r -d '' dir; do
 
   label="$(slug "$(basename "$dir")")"
   cdir="$OUT/train/$label"; mkdir -p "$cdir"
-  i=0
+  # Resume numbering from existing frames so same-slug folders MERGE (e.g.
+  # "Splenomegalia" + "Splenomegalia_2") into one class instead of clobbering.
+  i=$(find "$cdir" -type f -name '*.png' | wc -l | tr -d ' ')
   for f in "${jpgs[@]}"; do cp "$f" "$cdir/$(printf 'img_%04d.png' "$i")" 2>/dev/null && i=$((i+1)); done
   for v in "${avis[@]}"; do
-    ffmpeg -y -v error -i "$v" -vf "fps=$FPS" "$cdir/vid$(printf '%02d' "$i")_%03d.png" 2>/dev/null || true
+    ffmpeg -nostdin -y -v error -i "$v" -vf "fps=$FPS" "$cdir/vid$(printf '%02d' "$i")_%03d.png" 2>/dev/null || true
     i=$(find "$cdir" -type f -name '*.png' | wc -l | tr -d ' ')
   done
   frames=$(find "$cdir" -type f -name '*.png' | wc -l | tr -d ' ')
