@@ -21,6 +21,10 @@ pub fn export_yolo(config: &ExportConfig, items: &[ExportItem]) -> Result<()> {
         ImageExportFormat::Tiff => "tiff",
     };
 
+    // Frame-level classification has no slot in YOLO detection labels
+    // (class_id there names the detected ROI). Collect it into a sidecar instead.
+    let mut classifications = String::new();
+
     for item in items {
         let stem = format!("frame_{:06}", item.metadata.frame_index);
         let frame = &item.processed.frame;
@@ -54,11 +58,26 @@ pub fn export_yolo(config: &ExportConfig, items: &[ExportItem]) -> Result<()> {
 
         std::fs::write(&label_path, &label_content)
             .with_context(|| format!("failed to write label: {}", label_path.display()))?;
+
+        if let Some(c) = &item.metadata.classification {
+            // image_filename<TAB>label<TAB>confidence
+            classifications.push_str(&format!(
+                "images/{stem}.{ext}\t{}\t{:.6}\n",
+                c.label, c.confidence
+            ));
+        }
     }
 
     // Write classes.txt
     let classes_path = output_dir.join("classes.txt");
     std::fs::write(&classes_path, "ultrasound_roi\n").context("failed to write classes.txt")?;
+
+    // Write classification sidecar only when at least one frame was classified
+    if !classifications.is_empty() {
+        let sidecar_path = output_dir.join("classifications.txt");
+        std::fs::write(&sidecar_path, &classifications)
+            .context("failed to write classifications.txt")?;
+    }
 
     tracing::info!(
         "exported YOLO dataset: {} items → {}",
@@ -251,5 +270,73 @@ mod tests {
         // Check classes.txt
         let classes = std::fs::read_to_string(dir.path().join("classes.txt")).unwrap();
         assert_eq!(classes.trim(), "ultrasound_roi");
+
+        // No classification on the item → no sidecar file
+        assert!(!dir.path().join("classifications.txt").exists());
+    }
+
+    #[test]
+    fn export_yolo_classification_sidecar() {
+        use crate::imaging::types::{Classification, ColorSpace, FrameMetadata, FrameSource};
+        use crate::pipeline::contracts::{
+            ExportConfig, ExportFormat, ExportItem, ImageExportFormat, ProcessedFrame,
+        };
+
+        let dir = tempfile::tempdir().unwrap();
+        let frame = crate::imaging::types::Frame {
+            data: vec![128u8; 100],
+            width: 10,
+            height: 10,
+            colorspace: ColorSpace::Grayscale,
+            source: FrameSource::Image {
+                path: String::new(),
+            },
+        };
+
+        let config = ExportConfig {
+            format: ExportFormat::Yolo,
+            output_dir: dir.path().to_str().unwrap().to_string(),
+            image_format: ImageExportFormat::Png,
+            include_metadata: false,
+        };
+
+        let mk = |idx: usize, cls: Option<Classification>| ExportItem {
+            processed: ProcessedFrame {
+                frame: frame.clone(),
+                filters_applied: vec![],
+            },
+            annotation: None,
+            metadata: FrameMetadata {
+                frame_index: idx,
+                classification: cls,
+                ..Default::default()
+            },
+        };
+
+        let items = vec![
+            mk(
+                0,
+                Some(Classification {
+                    label: "ovary".to_string(),
+                    confidence: 0.97,
+                }),
+            ),
+            mk(1, None), // unclassified — must not appear in sidecar
+            mk(
+                2,
+                Some(Classification {
+                    label: "cardiac".to_string(),
+                    confidence: 0.88,
+                }),
+            ),
+        ];
+
+        export_yolo(&config, &items).unwrap();
+
+        let sidecar = std::fs::read_to_string(dir.path().join("classifications.txt")).unwrap();
+        let lines: Vec<&str> = sidecar.lines().collect();
+        assert_eq!(lines.len(), 2, "only classified frames appear");
+        assert_eq!(lines[0], "images/frame_000000.png\tovary\t0.970000");
+        assert_eq!(lines[1], "images/frame_000002.png\tcardiac\t0.880000");
     }
 }
