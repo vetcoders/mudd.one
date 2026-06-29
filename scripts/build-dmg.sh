@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # build-dmg.sh — Build mudd.app (Release) + package as DMG
-# Supports ad-hoc signing and notarization via vista-build profile
-# Created by M&K (c)2026 VetCoders
+# Supports ad-hoc signing and notarization via a notarytool keychain profile
+# Created by vetcoders (c)2026
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -16,7 +16,7 @@ BUILD_DIR="${REPO_ROOT}/build"
 APP_PATH="${BUILD_DIR}/${APP_NAME}.app"
 DMG_PATH="${BUILD_DIR}/${DMG_NAME}.dmg"
 SIGNING_IDENTITY="${SIGNING_IDENTITY:--}"
-NOTARY_PROFILE="${NOTARY_PROFILE:-vista-build}"
+NOTARY_PROFILE="${NOTARY_PROFILE:-}"
 KEYS_DIR="${HOME}/.keys"
 
 echo "=== mudd.one DMG builder ==="
@@ -123,7 +123,7 @@ if [ "${SIGNING_IDENTITY}" != "-" ]; then
     echo ""
     echo "To store notary credentials first:"
     echo "  xcrun notarytool store-credentials '${NOTARY_PROFILE}' \\"
-    echo "    --key '${KEYS_DIR}/AuthKey_ZT6AXN3759.p8' \\"
-    echo "    --key-id ZT6AXN3759 \\"
+    echo "    --key '${KEYS_DIR}/AuthKey_<YOUR_KEY_ID>.p8' \\"
+    echo "    --key-id <YOUR_KEY_ID> \\"
     echo "    --issuer <YOUR_ISSUER_ID>"
 fi

@@ -1,6 +1,6 @@
 # mudd.one - Veterinary Ultrasound Processing Pipeline
 # Rust workspace: mudd-core + mudd-ffi
-# Created by M&K (c)2026 VetCoders
+# Created by vetcoders (c)2026
 
 .PHONY: all build release check fmt fmt-check lint test test-quick ci fix clean help \
         hooks-install hooks-uninstall pre-commit pre-push \
@@ -133,7 +133,7 @@ dmg:
 	@./scripts/build-dmg.sh
 
 dmg-signed:
-	@SIGNING_IDENTITY="Developer ID Application: Maciej Gad (MW223P3NPX)" ./scripts/build-dmg.sh
+	@SIGNING_IDENTITY="$${SIGNING_IDENTITY:-Developer ID Application: Your Name (TEAMID)}" ./scripts/build-dmg.sh
 
 # ============================================================================
 # Git Hooks

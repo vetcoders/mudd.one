@@ -85,7 +85,7 @@ pub fn segment_frame(frame: &Frame, prompts: &[PromptPoint]) -> Result<Vec<Mask>
     let labels_tensor = Array::from_shape_vec((1, n_points), point_labels)
         .context("failed to create labels tensor")?;
 
-    // Run inference using ort Value API (same pattern as CodeScribe silero_ort.rs)
+    // Run inference using the ort Value API (Value::from_array + session.run)
     let image_value = Value::from_array(input_tensor)?;
     let coords_value = Value::from_array(coords_tensor)?;
     let labels_value = Value::from_array(labels_tensor)?;
