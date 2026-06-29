@@ -123,7 +123,7 @@ if [ "${SIGNING_IDENTITY}" != "-" ]; then
     echo ""
     echo "To store notary credentials first:"
     echo "  xcrun notarytool store-credentials '${NOTARY_PROFILE}' \\"
-    echo "    --key '${KEYS_DIR}/AuthKey_ZT6AXN3759.p8' \\"
-    echo "    --key-id ZT6AXN3759 \\"
+    echo "    --key '${KEYS_DIR}/AuthKey_<YOUR_KEY_ID>.p8' \\"
+    echo "    --key-id <YOUR_KEY_ID> \\"
     echo "    --issuer <YOUR_ISSUER_ID>"
 fi
