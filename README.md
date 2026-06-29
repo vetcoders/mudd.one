@@ -1,7 +1,7 @@
 
 # mudd.one - Multimodal Ultrasound Data Distiller (phase 1)
 
-![License](https://img.shields.io/github/license/Szowesgad/mudd.one)
+![License](https://img.shields.io/github/license/vetcoders/mudd.one)
 ![Python Version](https://img.shields.io/badge/python-3.8%2B-blue)
 ![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows-lightgrey)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.68%2B-green)
@@ -100,7 +100,7 @@ mudd.one aims to streamline the process of ultrasound video data analysis and da
 ### Quick Start
 ```bash
 # Clone repository
-git clone https://github.com/Szowesgad/mudd.one.git
+git clone https://github.com/vetcoders/mudd.one.git
 cd mudd.one
 
 # Install dependencies
@@ -286,8 +286,8 @@ Developed and maintained by [hiai.vision®](https://hiai.vision) (the AMLT.ai br
 ## 📞 Support & Contact
 
 ### Technical Support
-- GitHub Issues: [Issue Tracker](https://github.com/Szowesgad/mudd.one/issues)
-- Documentation: [Wiki](https://github.com/Szowesgad/mudd.one/wiki)
+- GitHub Issues: [Issue Tracker](https://github.com/vetcoders/mudd.one/issues)
+- Documentation: [Wiki](https://github.com/vetcoders/mudd.one/wiki)
 
 ### Contact Information
 - Email: mudd.project@hiai.vision
@@ -358,7 +358,7 @@ mudd.one/
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/Szowesgad/mudd.one.git
+git clone https://github.com/vetcoders/mudd.one.git
 cd mudd
 ```
 

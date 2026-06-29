@@ -1,5 +1,5 @@
 // mudd-ffi — UniFFI bridge for mudd.one
-// Created by M&K (c)2026 VetCoders
+// Created by vetcoders (c)2026
 
 uniffi::setup_scaffolding!();
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # build-dmg.sh — Build mudd.app (Release) + package as DMG
 # Supports ad-hoc signing and notarization via vista-build profile
-# Created by M&K (c)2026 VetCoders
+# Created by vetcoders (c)2026
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
