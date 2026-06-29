@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # build-dmg.sh — Build mudd.app (Release) + package as DMG
-# Supports ad-hoc signing and notarization via vista-build profile
+# Supports ad-hoc signing and notarization via a notarytool keychain profile
 # Created by vetcoders (c)2026
 set -euo pipefail
 
@@ -16,7 +16,7 @@ BUILD_DIR="${REPO_ROOT}/build"
 APP_PATH="${BUILD_DIR}/${APP_NAME}.app"
 DMG_PATH="${BUILD_DIR}/${DMG_NAME}.dmg"
 SIGNING_IDENTITY="${SIGNING_IDENTITY:--}"
-NOTARY_PROFILE="${NOTARY_PROFILE:-vista-build}"
+NOTARY_PROFILE="${NOTARY_PROFILE:-}"
 KEYS_DIR="${HOME}/.keys"
 
 echo "=== mudd.one DMG builder ==="
