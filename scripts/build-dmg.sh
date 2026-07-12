@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # build-dmg.sh — Build mudd.app (Release) + package as DMG
-# Supports ad-hoc signing and notarization via vista-build profile
-# Created by M&K (c)2026 VetCoders
+# Supports ad-hoc signing and notarization via a notarytool keychain profile
+# Created by vetcoders (c)2026
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -16,13 +16,13 @@ BUILD_DIR="${REPO_ROOT}/build"
 APP_PATH="${BUILD_DIR}/${APP_NAME}.app"
 DMG_PATH="${BUILD_DIR}/${DMG_NAME}.dmg"
 SIGNING_IDENTITY="${SIGNING_IDENTITY:--}"
-NOTARY_PROFILE="${NOTARY_PROFILE:-vista-build}"
+NOTARY_PROFILE="${NOTARY_PROFILE:-}"
 KEYS_DIR="${HOME}/.keys"
 
 echo "=== mudd.one DMG builder ==="
 echo "Version: ${VERSION}"
 echo "Signing: ${SIGNING_IDENTITY}"
-echo "Notary profile: ${NOTARY_PROFILE} (not used with ad-hoc)"
+echo "Notary profile: ${NOTARY_PROFILE:-not configured} (not used with ad-hoc)"
 
 # Step 1: Rust release build + Swift bindings
 echo ""
@@ -118,12 +118,12 @@ echo ""
 # Notarization instructions (for later)
 if [ "${SIGNING_IDENTITY}" != "-" ]; then
     echo "To notarize (when ready):"
-    echo "  xcrun notarytool submit '${DMG_PATH}' --keychain-profile '${NOTARY_PROFILE}' --wait"
+    echo "  xcrun notarytool submit '${DMG_PATH}' --keychain-profile '${NOTARY_PROFILE:-<PROFILE>}' --wait"
     echo "  xcrun stapler staple '${DMG_PATH}'"
     echo ""
     echo "To store notary credentials first:"
-    echo "  xcrun notarytool store-credentials '${NOTARY_PROFILE}' \\"
-    echo "    --key '${KEYS_DIR}/AuthKey_ZT6AXN3759.p8' \\"
-    echo "    --key-id ZT6AXN3759 \\"
+    echo "  xcrun notarytool store-credentials '${NOTARY_PROFILE:-<PROFILE>}' \\"
+    echo "    --key '${KEYS_DIR}/AuthKey_<YOUR_KEY_ID>.p8' \\"
+    echo "    --key-id <YOUR_KEY_ID> \\"
     echo "    --issuer <YOUR_ISSUER_ID>"
 fi

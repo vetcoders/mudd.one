@@ -1,6 +1,6 @@
 # mudd.one — Multimodal Ultrasound Data Distiller
 
-![License](https://img.shields.io/github/license/Szowesgad/mudd.one)
+![License](https://img.shields.io/github/license/vetcoders/mudd.one)
 ![Rust](https://img.shields.io/badge/Rust-edition%202024-orange)
 ![Swift](https://img.shields.io/badge/Swift-6.0%20%2F%20AppKit-blue)
 ![Platform](https://img.shields.io/badge/platform-macOS%2014%2B-lightgrey)

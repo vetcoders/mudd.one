@@ -1,5 +1,5 @@
 // mudd.one — Canvas (image display + ROI overlay + sequence navigator)
-// Created by M&K (c)2026 VetCoders
+// Created by vetcoders (c)2026
 
 import AppKit
 
